@@ -1,291 +1,514 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Confused Words Maze (English 101)</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; line-height: 1.35; background:#fff; color:#111; }
-    .card { max-width: 860px; border: 1px solid #d0d0d0; border-radius: 16px; padding: 18px; }
-    .meta { font-size: 14px; opacity: 0.85; margin-bottom: 10px; }
-    .prompt { font-size: 18px; margin: 10px 0 14px; white-space: pre-wrap; }
-    .choices { display: grid; gap: 10px; }
-    button { font-size: 16px; padding: 10px 12px; border-radius: 12px; border: 1px solid #999; background: #f7f7f7; cursor: pointer; text-align: left; }
-    button:hover { background: #efefef; }
-    .tiny { font-size: 13px; opacity: 0.85; margin-top: 10px; }
-    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; border: 1px solid #bbb; margin-right: 6px; font-size: 13px; }
-    .code { font-weight: 700; letter-spacing: 0.08em; }
-    .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-    .warn { padding:10px 12px; border:1px solid #e2c200; background:#fff9d6; border-radius:12px; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Triwizard Confused Words Maze</title>
+
+<style>
+:root{
+  --border:#cfcfcf;
+  --ink:#121212;
+  --muted:#5a5a5a;
+  --panel:#ffffff;
+  --soft:#f6f6f6;
+}
+
+body{
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  margin: 24px;
+  color: var(--ink);
+  line-height: 1.35;
+  background:
+    linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.wrap{ max-width: 1100px; margin: 0 auto; }
+
+.card{
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  background: var(--panel);
+}
+
+.top{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.badges{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+.pill{
+  display:inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid #bbb;
+  font-size: 13px;
+  background:#fff;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 16px;
+}
+
+@media(max-width: 980px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+.panel{
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  background:#fff;
+}
+
+.row{ display:flex; justify-content:space-between; align-items:center; gap: 10px; flex-wrap:wrap; }
+
+.hlabel{ margin: 0; font-size: 18px; }
+.corridor{ margin-top: 4px; font-size: 14px; color: var(--muted); }
+
+.prompt{
+  font-size:18px;
+  margin: 12px 0 12px;
+  white-space: pre-wrap;
+}
+
+.choice{
+  display:block;
+  width:100%;
+  padding:10px 12px;
+  margin-bottom:10px;
+  font-size:16px;
+  border-radius:14px;
+  border:1px solid #999;
+  background:var(--soft);
+  cursor:pointer;
+  text-align:left;
+}
+
+.choice:hover{ background:#ececec; }
+
+.choice:disabled{
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.small{
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.minimap{
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap:8px;
+  margin-top:10px;
+}
+
+/* Hedge-like texture for rooms */
+.room{
+  border:1px solid var(--border);
+  border-radius:10px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  color:var(--muted);
+  background:
+    linear-gradient(135deg, #e9f5ea 25%, transparent 25%) -8px 0/16px 16px,
+    linear-gradient(225deg, #e9f5ea 25%, transparent 25%) -8px 0/16px 16px,
+    linear-gradient(315deg, #e9f5ea 25%, transparent 25%) 0px 0/16px 16px,
+    linear-gradient(45deg,  #e9f5ea 25%, #ffffff 25%) 0px 0/16px 16px;
+}
+
+.room.done{
+  background:#dcebdc;
+  color:#111;
+}
+
+.room.here{
+  outline:2px solid #333;
+  font-weight:700;
+}
+
+.progress{
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.codebox{
+  margin-top:14px;
+  border:1px dashed #bbb;
+  padding:10px 12px;
+  border-radius:12px;
+  background:#fafafa;
+}
+
+.codeword{
+  font-weight:800;
+  letter-spacing:0.12em;
+  font-size:18px;
+  margin-top: 6px;
+}
+
+.restart{
+  border:1px solid #bbb;
+  border-radius:12px;
+  padding:6px 10px;
+  background:#fff;
+  cursor:pointer;
+}
+
+.restart:hover{ background:#f6f6f6; }
+</style>
 </head>
+
 <body>
+<div class="wrap">
   <div class="card">
-    <div class="meta row">
-      <span class="pill">English 101</span>
-      <span class="pill">Lightning Maze</span>
-      <span class="pill">Confused Words only</span>
+
+    <div class="top">
+      <div class="badges">
+        <span class="pill">English 101</span>
+        <span class="pill">Triwizard Maze</span>
+        <span class="pill">Confused Words</span>
+      </div>
+      <div class="row">
+        <div class="progress" id="progressLine">Room 1 of 20</div>
+        <button class="restart" id="restartBtn" type="button">Restart</button>
+      </div>
     </div>
 
-    <div id="app"></div>
+    <div class="grid">
+      <div class="panel">
+        <div class="row">
+          <div>
+            <h3 class="hlabel" id="label">Station</h3>
+            <div class="corridor" id="corridorLine">Hedge 1A (Third Task)</div>
+          </div>
+        </div>
 
-    <div class="tiny">
-      Instructor move: require groups to justify the choice out loud before clicking.
-      If you want “no backtracking,” tell students: once you click, you live with it.
+        <div class="prompt" id="prompt"></div>
+        <div id="choices"></div>
+
+        <div class="small">
+          Group rule: decide first, then click once. The maze won’t tell you if you’re wrong.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 class="hlabel">Maze Map</h3>
+        <div class="small">20 rooms. Everyone reaches a Cup. Only one Cup has the correct inscription.</div>
+        <div class="minimap" id="map"></div>
+
+        <div class="codebox">
+          <div class="small">Triwizard Cup Inscription (revealed at the end):</div>
+          <div class="codeword" id="finalWord">—</div>
+          <div class="small" id="endingText"></div>
+        </div>
+      </div>
     </div>
+
   </div>
+</div>
 
 <script>
-/*
-  MAZE DESIGN NOTES (edit freely):
-  - Each node is a station.
-  - Each choice routes to the next station.
-  - Correct corridor ends at END_TRUE with a real code word.
-  - Wrong corridor ends at END_FALSE with a plausible-but-wrong code.
+/* --- QUESTIONS (from your worksheet order 1–20) --- */
+const QUESTIONS = [
+  { label:"1) accept / except",
+    prompt:"I simply cannot ____ that he chose everyone in the room ____ me to invite to the party.",
+    choices:[
+      {text:"accept / except", correct:true},
+      {text:"except / accept", correct:false}
+    ]},
 
-  To customize:
-  1) Swap prompts for your textbook/worksheet sentences.
-  2) Update "letter" values so only the true corridor spells the target.
-*/
+  { label:"2) affect / effect",
+    prompt:"The overarching ____ of this drop in applicants for nursing positions is that patient care has been ____ed.",
+    choices:[
+      {text:"effect / affect", correct:true},
+      {text:"affect / effect", correct:false}
+    ]},
 
-const NODES = {
-  START: {
-    prompt:
-`START: Station 1 (affect/effect)
-Choose the correct word:
+  { label:"3) are / our",
+    prompt:"____ the Johnsons coming to ____ party Saturday night?",
+    choices:[
+      {text:"Are / our", correct:true},
+      {text:"Our / are", correct:false}
+    ]},
 
-“The ____ of getting anything lower than a B could mean I have to repeat Anatomy next semester.”`,
-    choices: [
-      { text: "affect", next: "S2_SHADOW", letter: "C" },
-      { text: "effect", next: "S2_TRUE",   letter: "C" }
-    ]
-  },
+  { label:"4) conscience / conscious",
+    prompt:"If you are ____ that you did something wrong, then it is probably because your ____ is bothering you.",
+    choices:[
+      {text:"conscious / conscience", correct:true},
+      {text:"conscience / conscious", correct:false}
+    ]},
 
-  // TRUE PATH (all correct answers)
-  S2_TRUE: {
-    prompt:
-`Station 2 (accept/except)
-Choose the correct word:
+  { label:"5) farther / further",
+    prompt:"I told Billy I would take him one mile ____ but that I couldn’t take him any ____ beyond that.",
+    choices:[
+      {text:"farther / further", correct:true},
+      {text:"further / farther", correct:false}
+    ]},
 
-“I cannot ____ anything less than a B on this assignment.”`,
-    choices: [
-      { text: "accept", next: "S3_TRUE", letter: "L" },
-      { text: "except", next: "S3_SHADOW", letter: "L" }
-    ]
-  },
+  { label:"6) fill / feel",
+    prompt:"You tend to ____ your free time with inane activities that make you ____ good.",
+    choices:[
+      {text:"fill / feel", correct:true},
+      {text:"feel / fill", correct:false}
+    ]},
 
-  S3_TRUE: {
-    prompt:
-`Station 3 (their/there/they’re)
-Choose the correct word:
+  { label:"7) its / it’s",
+    prompt:"____ about time you gave the hamster ____ dinner, isn’t it?",
+    choices:[
+      {text:"It’s / its", correct:true},
+      {text:"Its / it’s", correct:false}
+    ]},
 
-“When we got ____, I tried to be alluring over dinner.”`,
-    choices: [
-      { text: "their",   next: "S4_SHADOW", letter: "A" },
-      { text: "there",   next: "S4_TRUE",   letter: "A" },
-      { text: "they’re", next: "S4_SHADOW", letter: "A" }
-    ]
-  },
+  { label:"8) lay / lie",
+    prompt:"I tend to ____ on my bed most nights to sleep, but last night I ____ on the living room sofa.",
+    choices:[
+      {text:"lie / lay", correct:true},
+      {text:"lay / lie", correct:false}
+    ]},
 
-  S4_TRUE: {
-    prompt:
-`Station 4 (weather/whether)
-Choose the correct word:
+  { label:"9) loose / lose",
+    prompt:"If we ____ this game tomorrow night, all hell is going to break ____ at practice on Monday.",
+    choices:[
+      {text:"lose / loose", correct:true},
+      {text:"loose / lose", correct:false}
+    ]},
 
-“I’m not sure ____ or not he even noticed my blunders.”`,
-    choices: [
-      { text: "weather",  next: "S5_SHADOW", letter: "U" },
-      { text: "whether",  next: "S5_TRUE",   letter: "U" }
-    ]
-  },
+  { label:"10) should’ve / would’ve / could’ve",
+    prompt:"We should ____ asked Jamie and Roger to come with us; they would ____ enjoyed the display ____ antique cars, and we could ____ eaten at the 1950s-style diner afterward.",
+    choices:[
+      {text:"should’ve / would’ve / of / could’ve", correct:true},
+      {text:"should of / would of / of / could of", correct:false}
+    ]},
 
-  S5_TRUE: {
-    prompt:
-`Station 5 (to/too)
-Choose the correct word:
+  { label:"11) passed / past",
+    prompt:"I don’t care if you ____ or failed calculus in college; that’s all in the ____ now.",
+    choices:[
+      {text:"passed / past", correct:true},
+      {text:"past / passed", correct:false}
+    ]},
 
-“I think I was trying ____ hard.”`,
-    choices: [
-      { text: "to",  next: "S6_SHADOW", letter: "S" },
-      { text: "too", next: "S6_TRUE",   letter: "S" }
-    ]
-  },
+  { label:"12) principal / principle",
+    prompt:"Someone at my high school once offered the ____ a bribe to let their kid play football in spite of his GPA, but her high ____s prevented her from accepting it.",
+    choices:[
+      {text:"principal / principles", correct:true},
+      {text:"principle / principals", correct:false}
+    ]},
 
-  S6_TRUE: {
-    prompt:
-`Station 6 (passed/past)
-Choose the correct word:
+  /* YOUR CORRECTED #13 */
+  { label:"13) since / sense",
+    prompt:"Ever ____ I heard that story, I have wondered if parents really have any ____ at all.",
+    choices:[
+      {text:"since / sense", correct:true},
+      {text:"sense / since", correct:false}
+    ]},
 
-“When he picked me up, I walked right ____ his car.”`,
-    choices: [
-      { text: "passed", next: "S7_SHADOW", letter: "E" },
-      { text: "past",   next: "S7_TRUE",   letter: "E" }
-    ]
-  },
+  { label:"14) than / then",
+    prompt:"If you are a better hitter ____ Sarah, ____ you should show me at tomorrow’s game.",
+    choices:[
+      {text:"than / then", correct:true},
+      {text:"then / than", correct:false}
+    ]},
 
-  S7_TRUE: {
-    prompt:
-`Station 7 (were/we’re)
-Choose the correct word:
+  { label:"15) their / they’re / there",
+    prompt:"Sam and Dean said that ____ going to be late for ____ appointment with Castiel because ____ is a demon they need to kill first.",
+    choices:[
+      {text:"they’re / their / there", correct:true},
+      {text:"their / they’re / there", correct:false},
+      {text:"there / their / they’re", correct:false}
+    ]},
 
-“____ going straight through tonight.”`,
-    choices: [
-      { text: "were",  next: "S8_SHADOW", letter: "!" },
-      { text: "we’re", next: "END_TRUE",  letter: "!" }
-    ]
-  },
+  { label:"16) too / to",
+    prompt:"If you think you are ____ smart for that class, I invite you ____ drop it.",
+    choices:[
+      {text:"too / to", correct:true},
+      {text:"to / too", correct:false}
+    ]},
 
-  // SHADOW PATHS (wrong turns)
-  S2_SHADOW: {
-    prompt:
-`Station 2 (Shadow: loose/lose)
-Choose the correct word:
+  { label:"17) whether / weather",
+    prompt:"____ or not the ____ cooperates, we will be going to Dorney Park on Saturday.",
+    choices:[
+      {text:"Whether / weather", correct:true},
+      {text:"Weather / whether", correct:false}
+    ]},
 
-“We have no time to ____ momentum.”`,
-    choices: [
-      { text: "loose", next: "S3_SHADOW", letter: "L" },
-      { text: "lose",  next: "S3_SHADOW", letter: "L" }
-    ]
-  },
+  { label:"18) where / wear",
+    prompt:"____ is the green dress I wanted to ____ to the dinner tonight?",
+    choices:[
+      {text:"Where / wear", correct:true},
+      {text:"Wear / where", correct:false}
+    ]},
 
-  S3_SHADOW: {
-    prompt:
-`Station 3 (Shadow: its/it’s)
-Choose the correct word:
+  { label:"19) were / where",
+    prompt:"We’re not sure where your books are now, but they ____ on the table last time we checked.",
+    choices:[
+      {text:"were", correct:true},
+      {text:"where", correct:false}
+    ]},
 
-“____ hard to decide whether to lay down and take a nap.”`,
-    choices: [
-      { text: "Its",  next: "S4_SHADOW", letter: "A" },
-      { text: "It’s", next: "S4_SHADOW", letter: "A" }
-    ]
-  },
+  { label:"20) whose / who’s",
+    prompt:"____ going to help me figure out ____ coat this is?",
+    choices:[
+      {text:"Who’s / whose", correct:true},
+      {text:"Whose / who’s", correct:false}
+    ]}
+];
 
-  S4_SHADOW: {
-    prompt:
-`Station 4 (Shadow: principle/principal)
-Choose the correct word:
+/* --- SIGNATURE (hidden path) --- */
+let sig = 17;
+let index = 0;
+let finished = false;
 
-“I suppose I could have skipped it, but it’s against my ____.”`,
-    choices: [
-      { text: "principals", next: "S5_SHADOW", letter: "U" },
-      { text: "principles", next: "S5_SHADOW", letter: "U" }
-    ]
-  },
+/* Deterministic update: each click changes the hidden path signature. */
+function stepSig(current, correct, choiceIndex){
+  return (current * 31 + (correct ? 7 : 13) + choiceIndex * 3) % 100000;
+}
 
-  S5_SHADOW: {
-    prompt:
-`Station 5 (Shadow: then/than)
-Choose the correct word:
-
-“I would rather be relaxing in bed ____ working out.”`,
-    choices: [
-      { text: "then", next: "S6_SHADOW", letter: "S" },
-      { text: "than", next: "S6_SHADOW", letter: "S" }
-    ]
-  },
-
-  S6_SHADOW: {
-    prompt:
-`Station 6 (Shadow: lay/lie)
-Choose the correct word:
-
-“He gets to ____ in bed all morning.”`,
-    choices: [
-      { text: "lay", next: "END_FALSE", letter: "E" },
-      { text: "lie", next: "END_FALSE", letter: "E" }
-    ]
-  },
-
-  // ENDINGS
-  END_TRUE: {
-    prompt:
-`✅ EXIT FOUND
-If your corridor was perfect, your collected letters spell a target word.`,
-    choices: [
-      { text: "Reveal final code", next: "REVEAL_TRUE" },
-      { text: "Restart", next: "START_RESET" }
-    ]
-  },
-
-  END_FALSE: {
-    prompt:
-`🧱 DEAD END
-One wrong choice sends you to the wrong corridor.
-Your letters should NOT spell the target word.`,
-    choices: [
-      { text: "Reveal final code", next: "REVEAL_FALSE" },
-      { text: "Restart", next: "START_RESET" }
-    ]
-  },
-
-  REVEAL_TRUE: {
-    prompt:
-`Final code (correct corridor): IT'S ALMOST SPRING BREAK!
-`,
-    choices: [
-      { text: "Restart", next: "START_RESET" }
-    ]
-  },
-
-  REVEAL_FALSE: {
-    prompt:
-`Final code (wrong corridor): WAH-WAHHHHHHHH.
-`,
-    choices: [
-      { text: "Restart", next: "START_RESET" }
-    ]
-  },
-
-  START_RESET: {
-    prompt: "Resetting…",
-    choices: [
-      { text: "Go", next: "START" }
-    ]
+/* Compute the signature for the all-correct run (so we don't hardcode). */
+function computeTrueSig(){
+  let s = 17;
+  for (const q of QUESTIONS){
+    const ci = q.choices.findIndex(c => c.correct);
+    s = stepSig(s, true, ci);
   }
-};
+  return s;
+}
+const TRUE_SIG = computeTrueSig();
 
-let state = { nodeId: "START", letters: [] };
+/* --- "Corridor" flavor (changes every step; does NOT reveal correctness) --- */
+function corridorFromSig(s){
+  // A–E wing letter:
+  const wing = String.fromCharCode(65 + (s % 5));          // A..E
+  // 1–20 hedge segment:
+  const hedge = 1 + (s % 20);                               // 1..20
+  // 1–4 "turns" gives the illusion of direction changes:
+  const turn = ["Left", "Right", "Straight", "Hard Left"][s % 4];
+  // Small set of non-spoilery "obstacles" for flavor:
+  const obstacles = ["Whomping Willow vibes", "Skrewt tracks", "murmuring hedges", "glowing runes", "rustling branches"];
+  const obstacle = obstacles[s % obstacles.length];
 
-function render() {
-  const node = NODES[state.nodeId];
-  const app = document.getElementById("app");
+  return `Hedge ${hedge}${wing} — Turn: ${turn} — ${obstacle}`;
+}
 
-  const lettersLine = state.letters.length
-    ? `<div class="meta">Collected: <span class="code">${state.letters.join("")}</span></div>`
-    : `<div class="meta">Collected: <span class="code">(none yet)</span></div>`;
+/* --- Endings (Goblet-of-Fire themed, but non-spoilery) --- */
+function finalWord(){
+  if (sig === TRUE_SIG) return "PORTKEY"; // your "true" Cup inscription
+  const decoys = [
+    "PROTEGO","ACCIO","LUMOS","NOX","GOBLET","FIREBOLT",
+    "HOWLER","PENSIEVE","NIMBUS","WAND","HEDWIG","MUGGLE"
+  ];
+  return decoys[sig % decoys.length];
+}
 
-  const promptHtml = `<div class="prompt">${escapeHtml(node.prompt)}</div>`;
+function endingText(){
+  if (sig === TRUE_SIG){
+    return "You reached the Triwizard Cup. Keep your inscription secret until the class reveal.";
+  }
+  return "You reached a Cup… the maze is mischievous. Keep your inscription secret until the class reveal.";
+}
 
-  const choicesHtml = `<div class="choices">${
-    node.choices.map((c, idx) =>
-      `<button data-idx="${idx}">${escapeHtml(c.text)}</button>`
-    ).join("")
-  }</div>`;
+/* --- UI helpers --- */
+const elLabel = document.getElementById("label");
+const elCorridor = document.getElementById("corridorLine");
+const elPrompt = document.getElementById("prompt");
+const elChoices = document.getElementById("choices");
+const elMap = document.getElementById("map");
+const elFinalWord = document.getElementById("finalWord");
+const elEndingText = document.getElementById("endingText");
+const elProgress = document.getElementById("progressLine");
+const elRestart = document.getElementById("restartBtn");
 
-  app.innerHTML = lettersLine + promptHtml + choicesHtml;
+function renderMap(){
+  elMap.innerHTML = "";
+  for(let i=0;i<QUESTIONS.length;i++){
+    const div = document.createElement("div");
+    div.className = "room";
+    if (i < index) div.classList.add("done");
+    if (i === index && !finished) div.classList.add("here");
+    div.textContent = (i + 1);
+    elMap.appendChild(div);
+  }
+}
 
-  app.querySelectorAll("button").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      const choice = node.choices[Number(e.currentTarget.dataset.idx)];
+function render(){
+  renderMap();
 
-      if (state.nodeId === "START_RESET") state.letters = [];
-      if (choice.letter) state.letters.push(choice.letter);
+  // Update corridor flavor every render (depends on signature).
+  elCorridor.textContent = corridorFromSig(sig);
 
-      state.nodeId = choice.next;
-      render();
+  if (finished){
+    elProgress.textContent = "Finished — announce your inscription at the reveal";
+    elLabel.textContent = "Exit";
+    elPrompt.textContent =
+`You push through the last hedge wall and find a Cup on a pedestal.
+
+Do NOT announce your inscription yet.
+Wait until the instructor says “Reveal.”`;
+
+    elChoices.innerHTML = "";
+    elFinalWord.textContent = finalWord();
+    elEndingText.textContent = endingText();
+    return;
+  }
+
+  elProgress.textContent = `Room ${index + 1} of ${QUESTIONS.length}`;
+
+  const q = QUESTIONS[index];
+  elLabel.textContent = q.label;
+  elPrompt.textContent = q.prompt;
+
+  // Hide ending until the end
+  elFinalWord.textContent = "—";
+  elEndingText.textContent = "";
+
+  elChoices.innerHTML = "";
+  q.choices.forEach((c, choiceIndex) => {
+    const btn = document.createElement("button");
+    btn.className = "choice";
+    btn.type = "button";
+    btn.textContent = c.text;
+
+    // CLICK HANDLER
+    btn.addEventListener("click", () => {
+      // Prevent clickbacks/testing: disable all answer buttons immediately.
+      document.querySelectorAll(".choice").forEach(b => b.disabled = true);
+
+      // Update signature, advance one room, and re-render.
+      sig = stepSig(sig, !!c.correct, choiceIndex);
+      index++;
+
+      if (index >= QUESTIONS.length) finished = true;
+
+      // Small delay gives a sense of "moving through the hedge"
+      setTimeout(render, 220);
     });
+
+    elChoices.appendChild(btn);
   });
 }
 
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function restart(){
+  sig = 17;
+  index = 0;
+  finished = false;
+  render();
 }
 
+elRestart.addEventListener("click", restart);
 render();
 </script>
 </body>
