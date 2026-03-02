@@ -223,8 +223,7 @@ body{
 </div>
 
 <script>
-/* --- QUESTIONS --- */
-/* Each choice now has a stable id, so signature updates stay consistent even when we shuffle display order. */
+/* --- QUESTIONS (stable choice ids; shuffling won't affect correctness or signature) --- */
 const QUESTIONS = [
   { label:"1) accept / except",
     prompt:"I simply cannot ____ that he chose everyone in the room ____ me to invite to the party.",
@@ -232,99 +231,84 @@ const QUESTIONS = [
       {id:0, text:"accept / except", correct:true},
       {id:1, text:"except / accept", correct:false}
     ]},
-
   { label:"2) affect / effect",
     prompt:"The overarching ____ of this drop in applicants for nursing positions is that patient care has been ____ed.",
     choices:[
       {id:0, text:"effect / affect", correct:true},
       {id:1, text:"affect / effect", correct:false}
     ]},
-
   { label:"3) are / our",
     prompt:"____ the Johnsons coming to ____ party Saturday night?",
     choices:[
       {id:0, text:"Are / our", correct:true},
       {id:1, text:"Our / are", correct:false}
     ]},
-
   { label:"4) conscience / conscious",
     prompt:"If you are ____ that you did something wrong, then it is probably because your ____ is bothering you.",
     choices:[
       {id:0, text:"conscious / conscience", correct:true},
       {id:1, text:"conscience / conscious", correct:false}
     ]},
-
   { label:"5) farther / further",
     prompt:"I told Billy I would take him one mile ____ but that I couldn’t take him any ____ beyond that.",
     choices:[
       {id:0, text:"farther / further", correct:true},
       {id:1, text:"further / farther", correct:false}
     ]},
-
   { label:"6) fill / feel",
     prompt:"You tend to ____ your free time with inane activities that make you ____ good.",
     choices:[
       {id:0, text:"fill / feel", correct:true},
       {id:1, text:"feel / fill", correct:false}
     ]},
-
   { label:"7) its / it’s",
     prompt:"____ about time you gave the hamster ____ dinner, isn’t it?",
     choices:[
       {id:0, text:"It’s / its", correct:true},
       {id:1, text:"Its / it’s", correct:false}
     ]},
-
   { label:"8) lay / lie",
     prompt:"I tend to ____ on my bed most nights to sleep, but last night I ____ on the living room sofa.",
     choices:[
       {id:0, text:"lie / lay", correct:true},
       {id:1, text:"lay / lie", correct:false}
     ]},
-
   { label:"9) loose / lose",
     prompt:"If we ____ this game tomorrow night, all hell is going to break ____ at practice on Monday.",
     choices:[
       {id:0, text:"lose / loose", correct:true},
       {id:1, text:"loose / lose", correct:false}
     ]},
-
   { label:"10) should’ve / would’ve / could’ve",
     prompt:"We should ____ asked Jamie and Roger to come with us; they would ____ enjoyed the display ____ antique cars, and we could ____ eaten at the 1950s-style diner afterward.",
     choices:[
       {id:0, text:"should’ve / would’ve / of / could’ve", correct:true},
       {id:1, text:"should of / would of / of / could of", correct:false}
     ]},
-
   { label:"11) passed / past",
     prompt:"I don’t care if you ____ or failed calculus in college; that’s all in the ____ now.",
     choices:[
       {id:0, text:"passed / past", correct:true},
       {id:1, text:"past / passed", correct:false}
     ]},
-
   { label:"12) principal / principle",
     prompt:"Someone at my high school once offered the ____ a bribe to let their kid play football in spite of his GPA, but her high ____s prevented her from accepting it.",
     choices:[
       {id:0, text:"principal / principles", correct:true},
       {id:1, text:"principle / principals", correct:false}
     ]},
-
-  /* YOUR CORRECTED #13 */
   { label:"13) since / sense",
     prompt:"Ever ____ I heard that story, I have wondered if parents really have any ____ at all.",
     choices:[
       {id:0, text:"since / sense", correct:true},
       {id:1, text:"sense / since", correct:false}
     ]},
-
   { label:"14) than / then",
     prompt:"If you are a better hitter ____ Sarah, ____ you should show me at tomorrow’s game.",
     choices:[
       {id:0, text:"than / then", correct:true},
       {id:1, text:"then / than", correct:false}
     ]},
-
   { label:"15) their / they’re / there",
     prompt:"Sam and Dean said that ____ going to be late for ____ appointment with Castiel because ____ is a demon they need to kill first.",
     choices:[
@@ -332,35 +316,30 @@ const QUESTIONS = [
       {id:1, text:"their / they’re / there", correct:false},
       {id:2, text:"there / their / they’re", correct:false}
     ]},
-
   { label:"16) too / to",
     prompt:"If you think you are ____ smart for that class, I invite you ____ drop it.",
     choices:[
       {id:0, text:"too / to", correct:true},
       {id:1, text:"to / too", correct:false}
     ]},
-
   { label:"17) whether / weather",
     prompt:"____ or not the ____ cooperates, we will be going to Dorney Park on Saturday.",
     choices:[
       {id:0, text:"Whether / weather", correct:true},
       {id:1, text:"Weather / whether", correct:false}
     ]},
-
   { label:"18) where / wear",
     prompt:"____ is the green dress I wanted to ____ to the dinner tonight?",
     choices:[
       {id:0, text:"Where / wear", correct:true},
       {id:1, text:"Wear / where", correct:false}
     ]},
-
   { label:"19) were / where",
     prompt:"We’re not sure where your books are now, but they ____ on the table last time we checked.",
     choices:[
       {id:0, text:"were", correct:true},
       {id:1, text:"where", correct:false}
     ]},
-
   { label:"20) whose / who’s",
     prompt:"____ going to help me figure out ____ coat this is?",
     choices:[
@@ -369,25 +348,29 @@ const QUESTIONS = [
     ]}
 ];
 
-/* --- RNG + SHUFFLE --- */
-function mulberry32(seed){
-  return function(){
-    seed |= 0;
-    seed = seed + 0x6D2B79F5 | 0;
-    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
+/* --- STRONG RANDOMNESS (no seeds, no repetition issues) --- */
+function randInt(maxExclusive){
+  // crypto is available in modern browsers; fallback to Math.random if needed
+  if (window.crypto && window.crypto.getRandomValues){
+    const a = new Uint32Array(1);
+    window.crypto.getRandomValues(a);
+    return a[0] % maxExclusive;
+  }
+  return Math.floor(Math.random() * maxExclusive);
 }
 
-// Seed once per run (so choices shuffle consistently within a run)
-let seed = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
-let rand = mulberry32(seed);
+function shuffleChoicesForDisplay(choices){
+  const a = choices.slice();
 
-function shuffleCopy(arr){
-  const a = arr.slice();
+  // Special-case 2 options: flip a coin to swap/reverse
+  if (a.length === 2){
+    if (randInt(2) === 1) a.reverse();
+    return a;
+  }
+
+  // Fisher–Yates for 3+
   for (let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(rand() * (i + 1));
+    const j = randInt(i + 1);
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -398,12 +381,10 @@ let sig = 17;
 let index = 0;
 let finished = false;
 
-/* Update signature using stable choice id (NOT displayed position). */
 function stepSig(current, correct, choiceId){
   return (current * 31 + (correct ? 7 : 13) + choiceId * 3) % 100000;
 }
 
-/* Compute signature for all-correct run (order-independent because we use choiceId). */
 function computeTrueSig(){
   let s = 17;
   for (const q of QUESTIONS){
@@ -414,7 +395,6 @@ function computeTrueSig(){
 }
 const TRUE_SIG = computeTrueSig();
 
-/* --- Corridor flavor (changes every step; doesn't reveal correctness) --- */
 function corridorFromSig(s){
   const wing = String.fromCharCode(65 + (s % 5)); // A..E
   const hedge = 1 + (s % 20);                     // 1..20
@@ -424,12 +404,12 @@ function corridorFromSig(s){
   return `Hedge ${hedge}${wing} — Turn: ${turn} — ${obstacle}`;
 }
 
-/* --- Endings --- */
 function finalWord(){
   if (sig === TRUE_SIG) return "PORTKEY";
   const decoys = ["PROTEGO","ACCIO","LUMOS","NOX","GOBLET","FIREBOLT","HOWLER","PENSIEVE","NIMBUS","WAND","HEDWIG","MUGGLE"];
   return decoys[sig % decoys.length];
 }
+
 function endingText(){
   if (sig === TRUE_SIG){
     return "You reached the Triwizard Cup. Keep your inscription secret until the class reveal.";
@@ -484,12 +464,10 @@ Wait until the instructor says “Reveal.”`;
   elLabel.textContent = q.label;
   elPrompt.textContent = q.prompt;
 
-  // Hide ending until the end
   elFinalWord.textContent = "—";
   elEndingText.textContent = "";
 
-  // Shuffle display choices
-  const displayChoices = shuffleCopy(q.choices);
+  const displayChoices = shuffleChoicesForDisplay(q.choices);
 
   elChoices.innerHTML = "";
   displayChoices.forEach((c) => {
@@ -498,18 +476,14 @@ Wait until the instructor says “Reveal.”`;
     btn.type = "button";
     btn.textContent = c.text;
 
-    // CLICK HANDLER
     btn.addEventListener("click", () => {
-      // Prevent clickbacks/testing
+      // lock buttons immediately (no experimentation)
       document.querySelectorAll(".choice").forEach(b => b.disabled = true);
 
-      // Update signature using stable choice id (not position)
       sig = stepSig(sig, !!c.correct, c.id);
-
       index++;
       if (index >= QUESTIONS.length) finished = true;
 
-      // tiny delay feels like moving through hedges
       setTimeout(render, 220);
     });
 
@@ -521,11 +495,6 @@ function restart(){
   sig = 17;
   index = 0;
   finished = false;
-
-  // New shuffle each restart
-  seed = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
-  rand = mulberry32(seed);
-
   render();
 }
 
