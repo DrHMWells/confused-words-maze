@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confused Words Maze (English 101)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; line-height: 1.35; background:#fff; color:#111; }
+    .card { max-width: 860px; border: 1px solid #d0d0d0; border-radius: 16px; padding: 18px; }
+    .meta { font-size: 14px; opacity: 0.85; margin-bottom: 10px; }
+    .prompt { font-size: 18px; margin: 10px 0 14px; white-space: pre-wrap; }
+    .choices { display: grid; gap: 10px; }
+    button { font-size: 16px; padding: 10px 12px; border-radius: 12px; border: 1px solid #999; background: #f7f7f7; cursor: pointer; text-align: left; }
+    button:hover { background: #efefef; }
+    .tiny { font-size: 13px; opacity: 0.85; margin-top: 10px; }
+    .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; border: 1px solid #bbb; margin-right: 6px; font-size: 13px; }
+    .code { font-weight: 700; letter-spacing: 0.08em; }
+    .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    .warn { padding:10px 12px; border:1px solid #e2c200; background:#fff9d6; border-radius:12px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="meta row">
+      <span class="pill">English 101</span>
+      <span class="pill">Lightning Maze</span>
+      <span class="pill">Confused Words only</span>
+    </div>
+
+    <div id="app"></div>
+
+    <div class="tiny">
+      Instructor move: require groups to justify the choice out loud before clicking.
+      If you want “no backtracking,” tell students: once you click, you live with it.
+    </div>
+  </div>
+
+<script>
+/*
+  MAZE DESIGN NOTES (edit freely):
+  - Each node is a station.
+  - Each choice routes to the next station.
+  - Correct corridor ends at END_TRUE with a real code word.
+  - Wrong corridor ends at END_FALSE with a plausible-but-wrong code.
+
+  To customize:
+  1) Swap prompts for your textbook/worksheet sentences.
+  2) Update "letter" values so only the true corridor spells the target.
+*/
+
+const NODES = {
+  START: {
+    prompt:
+`START: Station 1 (affect/effect)
+Choose the correct word:
+
+“The ____ of getting anything lower than a B could mean I have to repeat Anatomy next semester.”`,
+    choices: [
+      { text: "affect", next: "S2_SHADOW", letter: "C" },
+      { text: "effect", next: "S2_TRUE",   letter: "C" }
+    ]
+  },
+
+  // TRUE PATH (all correct answers)
+  S2_TRUE: {
+    prompt:
+`Station 2 (accept/except)
+Choose the correct word:
+
+“I cannot ____ anything less than a B on this assignment.”`,
+    choices: [
+      { text: "accept", next: "S3_TRUE", letter: "L" },
+      { text: "except", next: "S3_SHADOW", letter: "L" }
+    ]
+  },
+
+  S3_TRUE: {
+    prompt:
+`Station 3 (their/there/they’re)
+Choose the correct word:
+
+“When we got ____, I tried to be alluring over dinner.”`,
+    choices: [
+      { text: "their",   next: "S4_SHADOW", letter: "A" },
+      { text: "there",   next: "S4_TRUE",   letter: "A" },
+      { text: "they’re", next: "S4_SHADOW", letter: "A" }
+    ]
+  },
+
+  S4_TRUE: {
+    prompt:
+`Station 4 (weather/whether)
+Choose the correct word:
+
+“I’m not sure ____ or not he even noticed my blunders.”`,
+    choices: [
+      { text: "weather",  next: "S5_SHADOW", letter: "U" },
+      { text: "whether",  next: "S5_TRUE",   letter: "U" }
+    ]
+  },
+
+  S5_TRUE: {
+    prompt:
+`Station 5 (to/too)
+Choose the correct word:
+
+“I think I was trying ____ hard.”`,
+    choices: [
+      { text: "to",  next: "S6_SHADOW", letter: "S" },
+      { text: "too", next: "S6_TRUE",   letter: "S" }
+    ]
+  },
+
+  S6_TRUE: {
+    prompt:
+`Station 6 (passed/past)
+Choose the correct word:
+
+“When he picked me up, I walked right ____ his car.”`,
+    choices: [
+      { text: "passed", next: "S7_SHADOW", letter: "E" },
+      { text: "past",   next: "S7_TRUE",   letter: "E" }
+    ]
+  },
+
+  S7_TRUE: {
+    prompt:
+`Station 7 (were/we’re)
+Choose the correct word:
+
+“____ going straight through tonight.”`,
+    choices: [
+      { text: "were",  next: "S8_SHADOW", letter: "!" },
+      { text: "we’re", next: "END_TRUE",  letter: "!" }
+    ]
+  },
+
+  // SHADOW PATHS (wrong turns)
+  S2_SHADOW: {
+    prompt:
+`Station 2 (Shadow: loose/lose)
+Choose the correct word:
+
+“We have no time to ____ momentum.”`,
+    choices: [
+      { text: "loose", next: "S3_SHADOW", letter: "L" },
+      { text: "lose",  next: "S3_SHADOW", letter: "L" }
+    ]
+  },
+
+  S3_SHADOW: {
+    prompt:
+`Station 3 (Shadow: its/it’s)
+Choose the correct word:
+
+“____ hard to decide whether to lay down and take a nap.”`,
+    choices: [
+      { text: "Its",  next: "S4_SHADOW", letter: "A" },
+      { text: "It’s", next: "S4_SHADOW", letter: "A" }
+    ]
+  },
+
+  S4_SHADOW: {
+    prompt:
+`Station 4 (Shadow: principle/principal)
+Choose the correct word:
+
+“I suppose I could have skipped it, but it’s against my ____.”`,
+    choices: [
+      { text: "principals", next: "S5_SHADOW", letter: "U" },
+      { text: "principles", next: "S5_SHADOW", letter: "U" }
+    ]
+  },
+
+  S5_SHADOW: {
+    prompt:
+`Station 5 (Shadow: then/than)
+Choose the correct word:
+
+“I would rather be relaxing in bed ____ working out.”`,
+    choices: [
+      { text: "then", next: "S6_SHADOW", letter: "S" },
+      { text: "than", next: "S6_SHADOW", letter: "S" }
+    ]
+  },
+
+  S6_SHADOW: {
+    prompt:
+`Station 6 (Shadow: lay/lie)
+Choose the correct word:
+
+“He gets to ____ in bed all morning.”`,
+    choices: [
+      { text: "lay", next: "END_FALSE", letter: "E" },
+      { text: "lie", next: "END_FALSE", letter: "E" }
+    ]
+  },
+
+  // ENDINGS
+  END_TRUE: {
+    prompt:
+`✅ EXIT FOUND
+If your corridor was perfect, your collected letters spell a target word.`,
+    choices: [
+      { text: "Reveal final code", next: "REVEAL_TRUE" },
+      { text: "Restart", next: "START_RESET" }
+    ]
+  },
+
+  END_FALSE: {
+    prompt:
+`🧱 DEAD END
+One wrong choice sends you to the wrong corridor.
+Your letters should NOT spell the target word.`,
+    choices: [
+      { text: "Reveal final code", next: "REVEAL_FALSE" },
+      { text: "Restart", next: "START_RESET" }
+    ]
+  },
+
+  REVEAL_TRUE: {
+    prompt:
+`Final code (correct corridor): CLAUSE!
+Instructor option: require groups to write 1 sentence explaining WHY their first choice was correct.`,
+    choices: [
+      { text: "Restart", next: "START_RESET" }
+    ]
+  },
+
+  REVEAL_FALSE: {
+    prompt:
+`Final code (wrong corridor): CLOUSE?
+(Deliberately close to the real word—so students feel how “almost right” still fails in editing.)`,
+    choices: [
+      { text: "Restart", next: "START_RESET" }
+    ]
+  },
+
+  START_RESET: {
+    prompt: "Resetting…",
+    choices: [
+      { text: "Go", next: "START" }
+    ]
+  }
+};
+
+let state = { nodeId: "START", letters: [] };
+
+function render() {
+  const node = NODES[state.nodeId];
+  const app = document.getElementById("app");
+
+  const lettersLine = state.letters.length
+    ? `<div class="meta">Collected: <span class="code">${state.letters.join("")}</span></div>`
+    : `<div class="meta">Collected: <span class="code">(none yet)</span></div>`;
+
+  const promptHtml = `<div class="prompt">${escapeHtml(node.prompt)}</div>`;
+
+  const choicesHtml = `<div class="choices">${
+    node.choices.map((c, idx) =>
+      `<button data-idx="${idx}">${escapeHtml(c.text)}</button>`
+    ).join("")
+  }</div>`;
+
+  app.innerHTML = lettersLine + promptHtml + choicesHtml;
+
+  app.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const choice = node.choices[Number(e.currentTarget.dataset.idx)];
+
+      if (state.nodeId === "START_RESET") state.letters = [];
+      if (choice.letter) state.letters.push(choice.letter);
+
+      state.nodeId = choice.next;
+      render();
+    });
+  });
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+render();
+</script>
+</body>
+</html>
